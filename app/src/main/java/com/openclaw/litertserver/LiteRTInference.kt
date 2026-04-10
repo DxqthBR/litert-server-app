@@ -6,6 +6,7 @@ import com.google.ai.edge.litertlm.EngineConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.io.File
+import kotlinx.coroutines.flow.collect
 
 class LiteRTInference(private val context: Context) {
     private var engine: Engine? = null
@@ -19,14 +20,12 @@ class LiteRTInference(private val context: Context) {
         engine?.initialize()
     }
 
-    suspend fun generateResponse(prompt: String): Flow<String> = flow {
-        val conversation = engine?.createConversation()
-        conversation?.sendMessageAsync(prompt) { response ->
-            // This is a simplified version. Real LiteRT-LM might stream differently.
-            // For now, we assume a simple callback or mapping.
+    fun generateResponse(prompt: String): Flow<String> = flow {
+        engine?.createConversation()?.let { conversation ->
+            conversation.sendMessageAsync(prompt).collect { chunk ->
+                emit(chunk)
+            }
         }
-        // Placeholder for streaming logic
-        emit("Response from LiteRT for: $prompt")
     }
 
     fun close() {

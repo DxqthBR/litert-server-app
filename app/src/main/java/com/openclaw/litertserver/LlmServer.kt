@@ -8,7 +8,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.reduce
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -37,11 +37,19 @@ class LlmServer(private val inference: LiteRTInference) {
                     val request = call.receive<ChatRequest>()
                     val prompt = request.messages.lastOrNull()?.content ?: ""
                     
-                    // Here we would integrate with inference.generateResponse
-                    // For now, returning a static response to prove the server works
+                    // Concatenamos todos los fragmentos del Flow para dar la respuesta final
+                    var fullResponse = ""
+                    try {
+                        inference.generateResponse(prompt).collect { chunk ->
+                            fullResponse += chunk
+                        }
+                    } catch (e: Exception) {
+                        fullResponse = "Error en inferencia: ${e.message}"
+                    }
+
                     val response = ChatResponse(
-                        id = "chatcmpl-123",
-                        choices = listOf(Choice(Message("assistant", "Hello from LiteRT! You said: $prompt")))
+                        id = "chatcmpl-${System.currentTimeMillis()}",
+                        choices = listOf(Choice(Message("assistant", fullResponse)))
                     )
                     call.respond(response)
                 }
