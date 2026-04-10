@@ -8,7 +8,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.flow.reduce
+import kotlinx.coroutines.flow.collect
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
